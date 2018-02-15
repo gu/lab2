@@ -57,12 +57,14 @@ def ecb_decrypt(key, enc):
 def decrypt(key, enc):
     dec = ''
     enc_sub = ''
+    enc_pre = ''
 
     for x in range(0, len(enc) / BLOCK_SIZE):
         enc_sub = enc[x*BLOCK_SIZE:(x+1)*BLOCK_SIZE]
         dec_sub = ecb_decrypt(key, enc_sub)
-        dec_sub = xor(dec_sub, IV if x == 0 else enc_sub)
+        dec_sub = xor(dec_sub, IV if x == 0 else enc_pre)
         dec = dec + dec_sub
+        enc_pre = enc_sub
 
     return unpad(dec)
 
