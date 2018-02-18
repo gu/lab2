@@ -42,14 +42,16 @@ def decrypt(key, enc):
         dec = dec + dec_sub
         enc_pre = enc_sub
 
-        # We now have the original, padded plaintext.
-        # We must check the correctness.
+    # We now have the original, padded plaintext.
+    # We must check the correctness.
     padbit = dec[len(dec) - 1]
     padnum = ord(padbit)
     for b in range(0, padnum):
         if (dec[len(dec) - 1 - b] != padbit):
-            return 'No'
-    return 'Yes'
+            print('Padding correct? ---> No')
+            return 0
+    print('Padding correct? ---> Yes')
+    return 1
 
 def getopts(argv):
     opts = {}
@@ -63,6 +65,6 @@ if __name__ == '__main__':
     myargs = getopts(sys.argv)
     if '-d' in myargs:
         ciphertext = binascii.unhexlify(myargs['-d'])
-        print('Padding correct? ---> ' + decrypt(key, ciphertext))
+        decrypt(key, ciphertext)
     else:
         print('python cbc.py -d 21f570f8e55f0f090260bb863b6a5780')
