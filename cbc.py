@@ -14,7 +14,7 @@ BLOCK_SIZE = 16
 key = binascii.unhexlify('00112233445566778899aabbccddeeff')
 
 # the 128-bit Initial value 
-IV = binascii.unhexlify('ffeeddccbbaa99887766554433221100')
+IV = binascii.unhexlify('ec96611de5aece583b8e07a3013d4ede')
 
 # The function to apply PKCS #5 padding to a block
 def pad(s):

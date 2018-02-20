@@ -14,7 +14,7 @@ BLOCK_SIZE = 16
 key = binascii.unhexlify('00112233445566778899aabbccddeeff')
 
 # the 128-bit Initial value 
-IV = binascii.unhexlify('ffeeddccbbaa99887766554433221100')
+IV = binascii.unhexlify('ec96611de5aece583b8e07a3013d4ede')
 
 # The function to remove padding
 def unpad(s):
@@ -30,7 +30,7 @@ def ecb_decrypt(key, enc):
     cipher = AES.new(key, AES.MODE_ECB)
     return cipher.decrypt(enc)
 
-def decrypt(key, enc):
+def oracle(key, enc):
     dec = ''
     enc_sub = ''
     enc_pre = ''
@@ -41,15 +41,21 @@ def decrypt(key, enc):
         dec_sub = xor(dec_sub, IV if x == 0 else enc_pre)
         dec = dec + dec_sub
         enc_pre = enc_sub
-
+        
     # We now have the original, padded plaintext.
     # We must check the correctness.
-    padbit = dec[len(dec) - 1]
+
+    padbit = dec[-1:]
     padnum = ord(padbit)
     for b in range(0, padnum):
         if (dec[len(dec) - 1 - b] != padbit):
             print('Padding correct? ---> No')
             return 0
+    if padnum == 0:
+        for i in range(1, 17):
+            if (dec[len(dec) - i] != padbit):
+                print('Padding correct? ---> No')
+                return 0
     print('Padding correct? ---> Yes')
     return 1
 
@@ -65,6 +71,6 @@ if __name__ == '__main__':
     myargs = getopts(sys.argv)
     if '-d' in myargs:
         ciphertext = binascii.unhexlify(myargs['-d'])
-        decrypt(key, ciphertext)
+        oracle(key, ciphertext)
     else:
-        print('python cbc.py -d 21f570f8e55f0f090260bb863b6a5780')
+        print('python oracle.py -d 36b6b04d109dce310bf84df6b0f65cc8')

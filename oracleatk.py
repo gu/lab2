@@ -14,7 +14,7 @@ BLOCK_SIZE = 16
 key = binascii.unhexlify('00112233445566778899aabbccddeeff')
 
 # the 128-bit Initial value 
-IV = binascii.unhexlify('ffeeddccbbaa99887766554433221100')
+IV = binascii.unhexlify('ec96611de5aece583b8e07a3013d4ede')
 
 # The function to apply PKCS #5 padding to a block
 def pad(s):
@@ -29,9 +29,10 @@ def unpad(s):
 
 def xor(a, b):
     ret = ''
-    for i in range(0, BLOCK_SIZE):
+    for i in range(0, len(a)):
         ret = ret + chr((ord(a[i:i+1]) ^ ord(b[i:i+1])))
     return ret
+
 
 def ecb_encrypt(key, raw):
     cipher = AES.new(key, AES.MODE_ECB)
@@ -54,7 +55,7 @@ def ecb_decrypt(key, enc):
     cipher = AES.new(key, AES.MODE_ECB)
     return cipher.decrypt(enc)
 
-def decrypt(key, enc):
+def oracle(key, enc):
     dec = ''
     enc_sub = ''
     enc_pre = ''
@@ -65,8 +66,20 @@ def decrypt(key, enc):
         dec_sub = xor(dec_sub, IV if x == 0 else enc_pre)
         dec = dec + dec_sub
         enc_pre = enc_sub
+        
+    # We now have the original, padded plaintext.
+    # We must check the correctness.
 
-    return unpad(dec)
+    padbit = dec[-1:]
+    padnum = ord(padbit)
+    for b in range(0, padnum):
+        if (dec[len(dec) - 1 - b] != padbit):
+            return 0
+    if padnum == 0:
+        for i in range(1, 17):
+            if (dec[len(dec) - i] != padbit):
+                return 0
+    return 1
 
 def getopts(argv):
     opts = {}
@@ -84,16 +97,61 @@ if __name__ == '__main__':
         hexct = myargs['-d']
         ciphertext = binascii.unhexlify(hexct)
         # The second to last block is C(n-1)
-        cnminus1 = hexct[len(hexct)-2*BLOCK_SIZE:len(hexct)-BLOCK_SIZE-1]
-        # Modify C(n-1) and send to the padding oracle
+        czero = hexct[:-2*(BLOCK_SIZE*2)]
+        cnminus1 = hexct[-2*(BLOCK_SIZE*2):-1*(BLOCK_SIZE*2)]
+        if (len(hexct) == 2*BLOCK_SIZE):
+            cnminus1 = binascii.hexlify(IV)
+        cnminus1prime = cnminus1
+        cn = hexct[-1*(BLOCK_SIZE*2):]
+
+        d = ''
+        p = ''
         
-        # Call the oracle to verify the padding
-        output = subprocess.check_output(
-            "python oracle.py -d d25a16fe349cded7f6a2f2446f6da1c2", shell=True).rstrip()
-        if output[len(output)-1] == 's':
-            # WE KNOW PADDING IS CORRECT
-        elif:
-            # WE KNOW PADDING IS NOT CORRECT
+        potential_values = [None] * 2
+        for d_ctr in range(1, 17):
+            saved_byte = cnminus1[len(cnminus1)-(2*d_ctr):len(cnminus1)-(2*(d_ctr-1))]
+            output_count = 0
+            for i in range(0, 256):
+                new_byte = hex(i)[ -1 if i < 16 else -2 :]
+                if i < 16:
+                    new_byte = '0' + new_byte
+
+                cnminus1primelist = list(cnminus1prime)
+                cnminus1primelist[len(cnminus1)-(2*d_ctr):len(cnminus1)-(2*(d_ctr-1))] = new_byte
+                cnminus1prime = "".join(cnminus1primelist)
+            
+                cprime = czero + cnminus1prime + cn
+                if oracle(key, binascii.unhexlify(cprime)):
+                    potential_values[output_count] = cnminus1prime
+                    output_count = output_count + 1
+            if d_ctr == 1 and output_count == 2:
+
+                cnminus1primelist = list(potential_values[0])
+                cnminus1primelist[-4:-2] = binascii.hexlify(xor(binascii.unhexlify(potential_values[0][-4:-2]), binascii.unhexlify('01')))
+                output = oracle(key, binascii.unhexlify(czero + "".join(cnminus1primelist) + cn))
+                if output == 0:
+                    cnminus1prime = potential_values[1]
+                cnminus1prime = potential_values[0]
+            else:
+                cnminus1prime = potential_values[0]
+
+            pnprime_byte = '0' + hex(d_ctr)[-1:] # assumption byte
+            d_byte = binascii.hexlify(xor(binascii.unhexlify(cnminus1prime[len(cnminus1prime)-2*d_ctr:len(cnminus1prime)-2*(d_ctr-1)]), binascii.unhexlify(pnprime_byte)))
+            d = d_byte + d
+
+            p_byte = binascii.hexlify(xor(binascii.unhexlify(cnminus1[len(cnminus1)-2*d_ctr:len(cnminus1)-2*(d_ctr-1)]), binascii.unhexlify(d_byte)))
+            p = p_byte + p
+
+            cnminus1primelist = list(cnminus1prime)
+
+            for x in range(1,d_ctr+1):
+                cnminus1primelist[len(cnminus1primelist) - 2*x:len(cnminus1primelist) - 2*(x-1)] = binascii.hexlify(xor(binascii.unhexlify(d[len(d) - 2*x:len(d) - 2*(x-1)]), binascii.unhexlify('0' + hex(d_ctr+1)[-1:])))
+            cnminus1prime = "".join(cnminus1primelist)
+            potential_values = [None] * 2
+
+        p = unpad(binascii.unhexlify(p))
+        print('Plaintext: ' + p)
+
     else:
         # This hex string is the encrypted message (Congratulations! ...)
-        print("python cbc.py -d e3ac392ae1d7e9341e1b244791176f6ee19f5a1c9a5c4c6a9e31bd4aa81f75dbf95f427a4757f0ed56ff68567a3b5e78f4cb080de6b18341ee0ac91b18bb2b55")
+        print("python cbc.py -d 16969ee1ce5aef08bd1edb546ea34205568c85b44e1dab2d3f4f251303089820f6e98fd23c28bd4aaa7998ff1abc287d96def0942f99c807298e1f2796b17694")
