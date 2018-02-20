@@ -154,4 +154,5 @@ if __name__ == '__main__':
 
     else:
         # This hex string is the encrypted message (Congratulations! ...)
-        print("python cbc.py -d 16969ee1ce5aef08bd1edb546ea34205568c85b44e1dab2d3f4f251303089820f6e98fd23c28bd4aaa7998ff1abc287d96def0942f99c807298e1f2796b17694")
+        print("python oracleatk.py -d 5a121b376144ed5be657869d1246ca68")
+        print("python oracleatk.py -d dfa314c8787fba9532394379075e715b9a4922d00889698ad59c8108eeb02ef694103121f818153a2036016ec182287c3de6fafa93f62d57f3061963654865b0")
