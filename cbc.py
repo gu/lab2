@@ -97,5 +97,5 @@ if __name__ == '__main__':
     else:
         print('python cbc.py -e 010203040506')
         print("python cbc.py -s 'this is cool'")
-        print('python cbc.py -d 21f570f8e55f0f090260bb863b6a5780')
-        print('python cbc.py -u 36b6b04d109dce310bf84df6b0f65cc8')
+        print('python cbc.py -d 4113e9e37d7284edcedc56deb0171d2e')
+        print('python cbc.py -u 99a45dec1c7e4b7ef8e44958c929a764')

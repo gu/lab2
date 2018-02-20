@@ -52,4 +52,7 @@ if __name__ == '__main__':
         plaintext = decrypt(key, ciphertext)
         print('Plaintext: ' + binascii.b2a_qp(plaintext))
     else:
-        print('python ecb.py')
+        print("python ecb.py -e 010203040506")
+        print("python ecb.py -s 'this is cool'")
+        print("python ecb.py -d d25a16fe349cded7f6a2f2446f6da1c2")
+        print("python ecb.py -u 9b43953eeb6c3b7b7971a8bec1a90819")

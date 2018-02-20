@@ -73,4 +73,4 @@ if __name__ == '__main__':
         ciphertext = binascii.unhexlify(myargs['-d'])
         oracle(key, ciphertext)
     else:
-        print('python oracle.py -d 36b6b04d109dce310bf84df6b0f65cc8')
+        print('python oracle.py -d 4113e9e37d7284edcedc56deb0171d2e')
